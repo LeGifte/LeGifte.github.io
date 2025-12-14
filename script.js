@@ -1,4 +1,4 @@
-/* ================= LeGifte FINAL COMPLETE script.js ================= */
+/* ================= LeGifte FINAL script.js ================= */
 
 /* ---------- PRODUCTS ---------- */
 const PRODUCTS = [
@@ -6,31 +6,36 @@ const PRODUCTS = [
     id: 1,
     name: "Mini Hamper",
     price: 599,
-    imgs: ["images/mini-hamper-1.jpg", "images/mini-hamper-2.jpg"]
+    imgs: ["images/mini-hamper-1.jpg", "images/mini-hamper-2.jpg"],
+    customizable: true
   },
   {
     id: 2,
     name: "Make Up Bouquet",
     price: 999,
-    imgs: ["images/makeup-bouquet.jpg"]
+    imgs: ["images/makeup-bouquet-1.jpg", "images/makeup-bouquet-2.jpg"],
+    customizable: true
   },
   {
     id: 3,
     name: "12 Beauty Products Hamper",
     price: 1299,
-    imgs: ["images/beauty-hamper-12.jpg"]
+    imgs: ["images/beauty-hamper-12-1.jpg", "images/beauty-hamper-12-2.jpg"],
+    customizable: true
   },
   {
     id: 4,
     name: "Mini 6 Beauty Item Cup Hamper",
     price: 299,
-    imgs: ["images/cup-hamper-1.jpg", "images/cup-hamper-2.jpg"]
+    imgs: ["images/cup-hamper-1.jpg", "images/cup-hamper-2.jpg"],
+    customizable: true
   },
   {
     id: 5,
     name: "Men Customizable Hamper",
     price: 2999,
-    imgs: ["images/men-hamper-1.jpg", "images/men-hamper-2.jpg"]
+    imgs: ["images/men-hamper-1.jpg", "images/men-hamper-2.jpg"],
+    customizable: true
   }
 ];
 
@@ -58,18 +63,17 @@ function renderProducts() {
       <img src="${p.imgs[0]}" alt="${p.name}">
       <h3>${p.name}</h3>
       <p>₹${p.price}</p>
-
-      <button onclick="openCustomize(${p.id})">Buy Now</button>
+      <button onclick="buyNow(${p.id})">Buy Now</button>
       <button onclick="addToWishlist(${p.id})">❤ Wishlist</button>
     `;
     box.appendChild(d);
   });
 }
 
-/* ---------- CUSTOMIZATION ---------- */
-function openCustomize(id) {
-  closeModal();
+/* ---------- BUY / CUSTOMIZATION ---------- */
+function buyNow(id) {
   const p = PRODUCTS.find(x => x.id === id);
+  closeModal();
 
   document.body.insertAdjacentHTML(
     "beforeend",
@@ -82,7 +86,7 @@ function openCustomize(id) {
         <label>Gift Message</label>
         <textarea id="giftMsg" placeholder="Write message (optional)"></textarea>
 
-        <button onclick="showPaymentOptions(${p.id})">Order Now</button>
+        <button onclick="orderNow(${p.id})">Order Now</button>
         <button onclick="closeModal()">Close</button>
       </div>
     </div>
@@ -90,67 +94,46 @@ function openCustomize(id) {
   );
 }
 
-function showPaymentOptions(id) {
-  const p = PRODUCTS.find(x => x.id === id);
-  const msg = document.getElementById("giftMsg")?.value || "No message";
-
-  document.querySelector(".modal-box").innerHTML = `
-    <h2>${p.name}</h2>
-    <p><b>₹${p.price}</b></p>
-    <p><b>Message:</b> ${msg}</p>
-
-    <button onclick="payUPI(${p.id})">Pay Online (UPI)</button>
-    <button onclick="payCOD(${p.id})">Cash on Delivery</button>
-    <button onclick="closeModal()">Cancel</button>
-  `;
-}
-
 function closeModal() {
   document.getElementById("modal")?.remove();
 }
 
-/* ---------- PAYMENTS ---------- */
-function payUPI(id) {
+/* ---------- ORDER NOW ---------- */
+function orderNow(id) {
   const p = PRODUCTS.find(x => x.id === id);
-  const msg = document.getElementById("giftMsg")?.value || "No message";
+  const msg = document.getElementById("giftMsg").value || "";
 
-  const waMsg = encodeURIComponent(
-    `🛒 NEW ORDER (UPI)\nProduct: ${p.name}\nPrice: ₹${p.price}\nMessage: ${msg}`
-  );
+  const cart = [{
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    message: msg
+  }];
 
-  window.location.href = `upi://pay?pa=9431541689@ibl&pn=LeGifte&am=${p.price}&cu=INR`;
-
-  setTimeout(() => {
-    window.open(`https://wa.me/919431541689?text=${waMsg}`);
-    alert("✅ Order placed successfully!");
-  }, 1500);
-}
-
-function payCOD(id) {
-  const p = PRODUCTS.find(x => x.id === id);
-  const msg = document.getElementById("giftMsg")?.value || "No message";
-
-  const waMsg = encodeURIComponent(
-    `🛒 NEW ORDER (COD)\nProduct: ${p.name}\nPrice: ₹${p.price}\nMessage: ${msg}`
-  );
-
-  window.open(`https://wa.me/919431541689?text=${waMsg}`);
-  alert("✅ Order placed successfully!");
+  saveCart(cart);
+  closeModal();
+  openCart();
 }
 
 /* ---------- CART ---------- */
 function openCart() {
   const cart = getCart();
   const box = document.getElementById("cartItems");
-  box.innerHTML = cart.length
-    ? cart.map((i, idx) => `
-        <p>
-          ${i.name} – ₹${i.price}
-          <button onclick="removeFromCart(${idx})">❌</button>
-        </p>
-      `).join("")
-    : "<p>Cart is empty</p>";
+  box.innerHTML = "";
 
+  if (!cart.length) {
+    box.innerHTML = "<p>Cart is empty</p>";
+  } else {
+    cart.forEach((i, idx) => {
+      box.innerHTML += `
+        <p>
+          ${i.name} – ₹${i.price}<br>
+          <small>${i.message || ""}</small><br>
+          <button onclick="removeFromCart(${idx})">Remove</button>
+        </p>
+      `;
+    });
+  }
   document.getElementById("cartModal").classList.remove("hidden");
 }
 
@@ -158,43 +141,40 @@ function closeCart() {
   document.getElementById("cartModal").classList.add("hidden");
 }
 
-function addToCart(id) {
-  const p = PRODUCTS.find(x => x.id === id);
+function removeFromCart(i) {
   const cart = getCart();
-  cart.push(p);
-  saveCart(cart);
-}
-
-function removeFromCart(index) {
-  const cart = getCart();
-  cart.splice(index, 1);
+  cart.splice(i, 1);
   saveCart(cart);
   openCart();
 }
 
 /* ---------- WISHLIST ---------- */
 function addToWishlist(id) {
-  const wl = getWishlist();
+  let wl = getWishlist();
   if (!wl.find(x => x.id === id)) {
     wl.push(PRODUCTS.find(x => x.id === id));
     saveWishlist(wl);
-    alert("❤️ Added to wishlist");
+    alert("Added to wishlist");
   }
 }
 
 function openWishlist() {
   const wl = getWishlist();
   const box = document.getElementById("wishlistItems");
+  box.innerHTML = "";
 
-  box.innerHTML = wl.length
-    ? wl.map((i, idx) => `
+  if (!wl.length) {
+    box.innerHTML = "<p>No items in wishlist</p>";
+  } else {
+    wl.forEach((i, idx) => {
+      box.innerHTML += `
         <p>
           ${i.name}
-          <button onclick="removeFromWishlist(${idx})">❌</button>
+          <button onclick="removeFromWishlist(${idx})">Remove</button>
         </p>
-      `).join("")
-    : "<p>No items in wishlist</p>";
-
+      `;
+    });
+  }
   document.getElementById("wishlistModal").classList.remove("hidden");
 }
 
@@ -202,11 +182,44 @@ function closeWishlist() {
   document.getElementById("wishlistModal").classList.add("hidden");
 }
 
-function removeFromWishlist(index) {
-  const wl = getWishlist();
-  wl.splice(index, 1);
+function removeFromWishlist(i) {
+  let wl = getWishlist();
+  wl.splice(i, 1);
   saveWishlist(wl);
   openWishlist();
+}
+
+/* ---------- PAYMENTS ---------- */
+function checkoutUPI() {
+  const cart = getCart();
+  if (!cart.length) return alert("Cart empty");
+
+  const total = cart.reduce((s, i) => s + i.price, 0);
+
+  const upi = `upi://pay?pa=9431541689@ibl&pn=LeGifte&am=${total}&cu=INR`;
+  window.location.href = upi;
+
+  sendWhatsApp("Paid Online (UPI)");
+}
+
+function checkoutCOD() {
+  sendWhatsApp("Cash on Delivery");
+  alert("Order placed successfully!");
+}
+
+/* ---------- WHATSAPP CONFIRM ---------- */
+function sendWhatsApp(mode) {
+  const cart = getCart();
+  let msg = "🛍️ New Order%0A";
+
+  cart.forEach(i => {
+    msg += `• ${i.name} – ₹${i.price}%0A`;
+    if (i.message) msg += `  Message: ${i.message}%0A`;
+  });
+
+  msg += `%0APayment: ${mode}`;
+
+  window.open(`https://wa.me/919431541689?text=${msg}`);
 }
 
 /* ---------- INIT ---------- */
