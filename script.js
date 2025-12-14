@@ -1,169 +1,128 @@
-/* ================= LeGifte SAFE script.js ================= */
+/* ================= LeGifte CSP SAFE FINAL SCRIPT ================= */
 
 const PRODUCTS = [
-  {
-    id: 1,
-    name: "Mini Hamper",
-    price: 599,
-    imgs: ["images/mini-hamper-1.jpg", "images/mini-hamper-2.jpg"],
-    customizable: true
-  },
-  {
-    id: 2,
-    name: "Make Up Bouquet",
-    price: 999,
-    imgs: ["images/makeup-bouquet.jpg"],
-    customizable: false
-  },
-  {
-    id: 3,
-    name: "12 Beauty Products Hamper",
-    price: 1299,
-    imgs: ["images/beauty-hamper-12.jpg"],
-    customizable: true
-  },
-  {
-    id: 4,
-    name: "Mini 6 Beauty Item Cup Hamper",
-    price: 299,
-    imgs: ["images/cup-hamper-1.jpg", "images/cup-hamper-2.jpg"],
-    customizable: true
-  },
-  {
-    id: 5,
-    name: "Men Customizable Hamper",
-    price: 2999,
-    imgs: ["images/men-hamper-1.jpg", "images/men-hamper-2.jpg"],
-    customizable: true
-  }
+  { id: 1, name: "Mini Hamper", price: 599, customizable: true },
+  { id: 2, name: "Make Up Bouquet", price: 999, customizable: false },
+  { id: 3, name: "12 Beauty Products Hamper", price: 1299, customizable: true },
+  { id: 4, name: "Mini 6 Beauty Item Cup Hamper", price: 299, customizable: true },
+  { id: 5, name: "Men Customizable Hamper", price: 2999, customizable: true }
 ];
 
-const CART_KEY = "legifte_cart";
-const WISHLIST_KEY = "legifte_wishlist";
+const ORDER_API = "https://script.google.com/macros/s/AKfycbxtd00FIPgoYL-XrtfwKGqBlM6_WwaTOq9NymQWQ9pKzU2tIRLsUBmu13h21GKF98gU/exec";
+const UPI_ID = "9431541689@ibl";
+const WHATSAPP = "919431541689";
 
-function getCart() {
-  return JSON.parse(localStorage.getItem(CART_KEY)) || [];
-}
-function saveCart(c) {
-  localStorage.setItem(CART_KEY, JSON.stringify(c));
-}
-
-function getWishlist() {
-  return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
-}
-function saveWishlist(w) {
-  localStorage.setItem(WISHLIST_KEY, JSON.stringify(w));
+/* ---------- HELPERS ---------- */
+function qs(id) {
+  return document.getElementById(id);
 }
 
-/* ---------- RENDER PRODUCTS ---------- */
-function renderProducts() {
-  const list = document.getElementById("product-list");
-  if (!list) return;
-
-  list.innerHTML = "";
-
-  PRODUCTS.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "product";
-
-    const img = document.createElement("img");
-    img.src = p.imgs[0];
-    img.alt = p.name;
-
-    const h3 = document.createElement("h3");
-    h3.textContent = p.name;
-
-    const price = document.createElement("p");
-    price.textContent = "₹" + p.price;
-
-    const buyBtn = document.createElement("button");
-    buyBtn.textContent = "Buy Now";
-    buyBtn.onclick = () => openProduct(p.id);
-
-    const wishBtn = document.createElement("button");
-    wishBtn.textContent = "❤ Wishlist";
-    wishBtn.onclick = () => addToWishlist(p.id);
-
-    div.appendChild(img);
-    div.appendChild(h3);
-    div.appendChild(price);
-    div.appendChild(buyBtn);
-    div.appendChild(wishBtn);
-
-    list.appendChild(div);
-  });
+/* ---------- BUY FLOW ---------- */
+function buyNow(id) {
+  const product = PRODUCTS.find(p => p.id === id);
+  localStorage.setItem("currentProduct", JSON.stringify(product));
+  openOrderForm(product);
 }
 
-/* ---------- PRODUCT MODAL ---------- */
-function openProduct(id) {
-  closeModal();
-  const p = PRODUCTS.find(x => x.id === id);
+function openOrderForm(product) {
+  const msgBox = product.customizable
+    ? <textarea id="giftMsg" placeholder="Gift Message"></textarea>
+    : "";
 
-  const modal = document.createElement("div");
-  modal.id = "modal";
-  modal.className = "modal";
+  document.body.insertAdjacentHTML("beforeend", `
+    <div class="modal" id="orderModal">
+      <div class="modal-box">
+        <h2>${product.name}</h2>
+        <p>₹${product.price}</p>
+        ${msgBox}
 
-  const box = document.createElement("div");
-  box.className = "modal-box";
+        <input id="custName" placeholder="Name" required>
+        <input id="custPhone" placeholder="Phone" required>
+        <textarea id="custAddress" placeholder="Full Address" required></textarea>
 
-  box.innerHTML = `
-    <h2>${p.name}</h2>
-    <p><b>₹${p.price}</b></p>
-    ${p.customizable ? '<textarea id="giftMsg" placeholder="Gift message (optional)"></textarea>' : ''}
-    <button id="orderNow">Order Now</button>
-    <button onclick="closeModal()">Close</button>
-  `;
+        <button id="payOnline">Pay Online</button>
+        <button id="payCOD">Cash on Delivery</button>
+        <button onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  `);
 
-  modal.appendChild(box);
-  document.body.appendChild(modal);
-
-  document.getElementById("orderNow").onclick = () => proceedOrder(p);
+  qs("payOnline").addEventListener("click", () => submitOrder("ONLINE"));
+  qs("payCOD").addEventListener("click", () => submitOrder("COD"));
 }
 
 function closeModal() {
-  const m = document.getElementById("modal");
-  if (m) m.remove();
+  qs("orderModal")?.remove();
 }
 
-/* ---------- ORDER ---------- */
-function proceedOrder(p) {
-  const msg = document.getElementById("giftMsg")?.value || "";
+/* ---------- ORDER SUBMIT ---------- */
+function submitOrder(mode) {
+  const product = JSON.parse(localStorage.getItem("currentProduct"));
 
-  const cart = getCart();
-  cart.push({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    message: msg
+  const data = {
+    product: product.name,
+    price: product.price,
+    name: qs("custName").value,
+    phone: qs("custPhone").value,
+    address: qs("custAddress").value,
+    message: qs("giftMsg")?.value || "",
+    paymentMode: mode
+  };
+
+  fetch(ORDER_API, {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(r => {
+    saveCustomerOrder(r.orderId, data);
+
+    if (mode === "ONLINE") {
+      const upi = upi://pay?pa=${UPI_ID}&pn=LeGifte&am=${product.price}&cu=INR;
+      window.location.href = upi;
+    } else {
+      alert("Order placed successfully (COD)");
+    }
+
+    showOrderSuccess(r.orderId);
   });
-  saveCart(cart);
+}
 
+/* ---------- CUSTOMER ORDERS ---------- */
+function saveCustomerOrder(id, data) {
+  const orders = JSON.parse(localStorage.getItem("myOrders") || "[]");
+  orders.push({
+    id,
+    ...data,
+    status: "Order Received",
+    eta: new Date(Date.now() + 7*86400000).toDateString()
+  });
+  localStorage.setItem("myOrders", JSON.stringify(orders));
+}
+
+function showOrderSuccess(orderId) {
   closeModal();
-  openPayment(p.price);
+  document.body.insertAdjacentHTML("beforeend", `
+    <div class="modal">
+      <div class="modal-box">
+        <h3>Order Received ✅</h3>
+        <p>Order ID: ${orderId}</p>
+        <p>Delivery in 7 days</p>
+
+        <button onclick="shareScreenshot()">Share Payment Screenshot</button>
+        <button onclick="this.parentElement.parentElement.remove()">Close</button>
+      </div>
+    </div>
+  `);
 }
 
-/* ---------- PAYMENT ---------- */
-function openPayment(amount) {
-  const upi = upi://pay?pa=9431541689@ibl&pn=LeGifte&am=${amount}&cu=INR;
-  window.location.href = upi;
-
-  setTimeout(() => {
-    alert("After payment, please send screenshot on WhatsApp to confirm order.");
-    window.open("https://wa.me/919431541689", "_blank");
-  }, 1500);
-}
-
-/* ---------- WISHLIST ---------- */
-function addToWishlist(id) {
-  const p = PRODUCTS.find(x => x.id === id);
-  const wl = getWishlist();
-
-  if (!wl.find(x => x.id === id)) {
-    wl.push(p);
-    saveWishlist(wl);
-    alert("Added to wishlist");
-  }
+function shareScreenshot() {
+  window.open(https://wa.me/${WHATSAPP}?text=Payment%20screenshot%20for%20my%20LeGifte%20order);
 }
 
 /* ---------- INIT ---------- */
-document.addEventListener("DOMContentLoaded", renderProducts);
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("[data-buy]").forEach(btn => {
+    btn.addEventListener("click", () => buyNow(Number(btn.dataset.buy)));
+  });
+});
