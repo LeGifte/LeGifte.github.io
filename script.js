@@ -1,8 +1,12 @@
-/* ================= LeGifte – FINAL SCRIPT ================= */
+/* ================= LeGifte FINAL script.js ================= */
 
-/* 🔗 GOOGLE SHEET WEB APP URL */
-const SHEET_API =
+/* ---------- CONFIG ---------- */
+const ORDER_API =
   "https://script.google.com/macros/s/AKfycbxtd00FIPgoYL-XrtfwKGqBlM6_WwaTOq9NymQWQ9pKzU2tIRLsUBmu13h21GKF98gU/exec";
+
+const UPI_ID = "9431541689@ibl";
+const PAYTM_ID = "9431541689@axl";
+const WHATSAPP = "919431541689";
 
 /* ---------- PRODUCTS ---------- */
 const PRODUCTS = [
@@ -46,16 +50,12 @@ const PRODUCTS = [
 /* ---------- STORAGE ---------- */
 const CART_KEY = "legifte_cart";
 const WISHLIST_KEY = "legifte_wishlist";
-const ORDERS_KEY = "legifte_orders";
 
 const getCart = () => JSON.parse(localStorage.getItem(CART_KEY)) || [];
 const saveCart = c => localStorage.setItem(CART_KEY, JSON.stringify(c));
 
 const getWishlist = () => JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
 const saveWishlist = w => localStorage.setItem(WISHLIST_KEY, JSON.stringify(w));
-
-const getOrders = () => JSON.parse(localStorage.getItem(ORDERS_KEY)) || [];
-const saveOrders = o => localStorage.setItem(ORDERS_KEY, JSON.stringify(o));
 
 /* ---------- RENDER PRODUCTS ---------- */
 function renderProducts() {
@@ -65,30 +65,34 @@ function renderProducts() {
   box.innerHTML = "";
 
   PRODUCTS.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "product";
+    const d = document.createElement("div");
+    d.className = "product";
 
-    div.innerHTML = `
+    d.innerHTML = `
       <img src="${p.imgs[0]}" alt="${p.name}">
       <h3>${p.name}</h3>
       <p>₹${p.price}</p>
 
-      <button onclick="buyNow(${p.id})">Buy Now</button>
+      <button onclick="openProduct(${p.id})">Buy Now</button>
       <button onclick="addToWishlist(${p.id})">❤ Wishlist</button>
     `;
 
-    box.appendChild(div);
+    box.appendChild(d);
   });
 }
 
-/* ---------- BUY / CUSTOMIZATION ---------- */
-function buyNow(id) {
-  const p = PRODUCTS.find(x => x.id === id);
-  openOrderModal(p);
-}
-
-function openOrderModal(p) {
+/* ---------- PRODUCT MODAL ---------- */
+function openProduct(id) {
   closeModal();
+  const p = PRODUCTS.find(x => x.id === id);
+
+  let msgBox = "";
+  if (p.customizable) {
+    msgBox = `
+      <label>Gift Message</label>
+      <textarea id="giftMsg" placeholder="Write your message"></textarea>
+    `;
+  }
 
   document.body.insertAdjacentHTML(
     "beforeend",
@@ -96,25 +100,22 @@ function openOrderModal(p) {
     <div id="modal" class="modal">
       <div class="modal-box">
         <h2>${p.name}</h2>
+        <img src="${p.imgs[0]}" style="width:100%;border-radius:8px">
         <p><b>₹${p.price}</b></p>
 
-        ${
-          p.customizable
-            ? `<label>Gift Message</label>
-               <textarea id="giftMsg" placeholder="Write message"></textarea>`
-            : ""
-        }
+        ${msgBox}
 
         <label>Name</label>
-        <input id="custName" placeholder="Full Name">
+        <input id="custName" placeholder="Your name">
 
         <label>Phone</label>
-        <input id="custPhone" placeholder="Mobile Number">
+        <input id="custPhone" placeholder="Phone number">
 
         <label>Address</label>
-        <textarea id="custAddress" placeholder="Full Address"></textarea>
+        <textarea id="custAddress" placeholder="Full address"></textarea>
 
-        <button onclick="selectPayment(${p.id})">Order Now</button>
+        <button onclick="placeOrder(${p.id}, 'ONLINE')">Pay Online</button>
+        <button onclick="placeOrder(${p.id}, 'COD')">Cash on Delivery</button>
         <button onclick="closeModal()">Close</button>
       </div>
     </div>
@@ -122,116 +123,84 @@ function openOrderModal(p) {
   );
 }
 
-/* ---------- PAYMENT MODE ---------- */
-function selectPayment(id) {
+function closeModal() {
+  document.getElementById("modal")?.remove();
+}
+
+/* ---------- ORDER ---------- */
+function placeOrder(id, mode) {
   const p = PRODUCTS.find(x => x.id === id);
 
-  const order = {
+  const data = {
     product: p.name,
     price: p.price,
     name: document.getElementById("custName").value,
     phone: document.getElementById("custPhone").value,
     address: document.getElementById("custAddress").value,
     message: document.getElementById("giftMsg")?.value || "",
-    date: new Date().toISOString(),
-    status: "Pending"
+    paymentMode: mode
   };
 
-  if (!order.name || !order.phone || !order.address) {
+  if (!data.name || !data.phone || !data.address) {
     alert("Please fill all details");
     return;
   }
 
-  saveOrders([...getOrders(), order]);
+  fetch(ORDER_API, {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
 
-  closeModal();
-
-  document.body.insertAdjacentHTML(
-    "beforeend",
-    `
-    <div id="modal" class="modal">
-      <div class="modal-box">
-        <h3>Select Payment Mode</h3>
-
-        <button onclick="payOnline(${p.price}, '${order.product}', '${order.phone}')">
-          Pay Online (PhonePe / Paytm)
-        </button>
-
-        <button onclick="payCOD('${order.product}', '${order.phone}')">
-          Cash on Delivery
-        </button>
-
-        <button onclick="closeModal()">Close</button>
-      </div>
-    </div>
-    `
-  );
-}
-
-/* ---------- ONLINE PAYMENT ---------- */
-function payOnline(amount, product, phone) {
-  const upi = upi://pay?pa=9431541689@ibl&pn=LeGifte&am=${amount}&cu=INR;
-
-  window.location.href = upi;
-
-  setTimeout(() => {
-    alert(
-      "Payment done? Please send screenshot on WhatsApp to confirm your order."
-    );
-
-    window.open(
-      https://wa.me/919431541689?text=Payment done for ${product}. Phone: ${phone}
-    );
-  }, 1500);
-}
-
-/* ---------- COD ---------- */
-function payCOD(product, phone) {
-  alert("Order placed with Cash on Delivery");
+  if (mode === "ONLINE") {
+    const upi = upi://pay?pa=${UPI_ID}&pn=LeGifte&am=${p.price}&cu=INR;
+    window.location.href = upi;
+  } else {
+    alert("Order placed! You will receive confirmation soon.");
+  }
 
   window.open(
-    https://wa.me/919431541689?text=New COD Order: ${product}, Phone: ${phone}
+    https://wa.me/${WHATSAPP}?text=New Order:%0A${p.name}%0A₹${p.price}%0A${data.name}%0A${data.phone},
+    "_blank"
   );
+
+  closeModal();
 }
 
 /* ---------- WISHLIST ---------- */
 function addToWishlist(id) {
-  const p = PRODUCTS.find(x => x.id === id);
   let wl = getWishlist();
-
   if (!wl.find(x => x.id === id)) {
-    wl.push(p);
+    wl.push(PRODUCTS.find(x => x.id === id));
     saveWishlist(wl);
     alert("Added to Wishlist");
   }
 }
 
 function openWishlist() {
-  const box = document.getElementById("wishlistItems");
   const wl = getWishlist();
-
+  const box = document.getElementById("wishlistItems");
   box.innerHTML = wl.length
-    ? wl
-        .map(
-          (i, idx) =>
-            <p>${i.name} <button onclick="removeWishlist(${idx})">Remove</button></p>
-        )
-        .join("")
-    : "<p>No wishlist items</p>";
-
+    ? wl.map(i => <p>${i.name}</p>).join("")
+    : "<p>No items</p>";
   document.getElementById("wishlistModal").classList.remove("hidden");
 }
 
-function removeWishlist(i) {
-  let wl = getWishlist();
-  wl.splice(i, 1);
-  saveWishlist(wl);
-  openWishlist();
+function closeWishlist() {
+  document.getElementById("wishlistModal").classList.add("hidden");
 }
 
-/* ---------- MODAL ---------- */
-function closeModal() {
-  document.getElementById("modal")?.remove();
+/* ---------- CART ---------- */
+function openCart() {
+  const cart = getCart();
+  const box = document.getElementById("cartItems");
+  box.innerHTML = cart.length
+    ? cart.map(i => <p>${i.name} – ₹${i.price}</p>).join("")
+    : "<p>Cart empty</p>";
+  document.getElementById("cartModal").classList.remove("hidden");
+}
+
+function closeCart() {
+  document.getElementById("cartModal").classList.add("hidden");
 }
 
 /* ---------- INIT ---------- */
