@@ -6,7 +6,10 @@ const PRODUCTS = [
     id: 1,
     name: "Mini Hamper",
     price: 599,
-    imgs: ["images/mini-hamper.jpg"],
+    imgs: [
+      "images/mini-hamper-1.jpg",
+      "images/mini-hamper-2.jpg"
+    ],
     category: "hamper",
     customizable: true
   },
@@ -14,7 +17,10 @@ const PRODUCTS = [
     id: 2,
     name: "Make Up Bouquet",
     price: 999,
-    imgs: ["images/makeup-bouquet.jpg"],
+    imgs: [
+      "images/makeup-bouquet-1.jpg",
+      "images/makeup-bouquet-2.jpg"
+    ],
     category: "beauty",
     customizable: true
   },
@@ -22,7 +28,10 @@ const PRODUCTS = [
     id: 3,
     name: "12 Beauty Products Hamper",
     price: 1299,
-    imgs: ["images/beauty-hamper-12.jpg"],
+    imgs: [
+      "images/beauty-hamper-12-1.jpg",
+      "images/beauty-hamper-12-2.jpg"
+    ],
     category: "beauty",
     customizable: true
   },
@@ -30,7 +39,10 @@ const PRODUCTS = [
     id: 4,
     name: "Mini 6 Beauty Item Cup Hamper",
     price: 299,
-    imgs: ["images/cup-hamper.jpg"],
+    imgs: [
+      "images/cup-hamper-6-1.jpg",
+      "images/cup-hamper-6-2.jpg"
+    ],
     category: "cup",
     customizable: true
   },
@@ -38,7 +50,10 @@ const PRODUCTS = [
     id: 5,
     name: "Men Customizable Hamper",
     price: 2999,
-    imgs: ["images/men-hamper.jpg"],
+    imgs: [
+      "images/men-custom-hamper-1.jpg",
+      "images/men-custom-hamper-2.jpg"
+    ],
     category: "men",
     customizable: true,
     shirtColors: [
@@ -49,17 +64,23 @@ const PRODUCTS = [
   },
   {
     id: 6,
-    name: "Jewellery Bouquets",
+    name: "Jewellery Bouquet",
     price: 799,
-    imgs: ["images/jewellery-bouquet.jpg"],
+    imgs: [
+      "images/jewellery-bouquet-1.jpg",
+      "images/jewellery-bouquet-2.jpg"
+    ],
     category: "jewellery",
     customizable: true
   },
   {
     id: 7,
-    name: "Snack Bouquets",
+    name: "Snack Bouquet",
     price: 999,
-    imgs: ["images/snack-bouquet.jpg"],
+    imgs: [
+      "images/snack-bouquet-1.jpg",
+      "images/snack-bouquet-2.jpg"
+    ],
     category: "snack",
     customizable: true
   },
@@ -67,7 +88,10 @@ const PRODUCTS = [
     id: 8,
     name: "Women Hamper",
     price: 1999,
-    imgs: ["images/women-hamper.jpg"],
+    imgs: [
+      "images/women-hamper-1.jpg",
+      "images/women-hamper-2.jpg"
+    ],
     category: "beauty",
     customizable: true
   }
@@ -93,7 +117,7 @@ function renderProducts() {
     const d = document.createElement("div");
     d.className = "product";
     d.innerHTML = `
-      <img src="${p.imgs[0]}">
+      <img src="${p.imgs[0]}" alt="${p.name}">
       <h3>${p.name}</h3>
       <p>₹${p.price}</p>
       <button onclick="openProduct(${p.id})">View</button>
@@ -104,6 +128,8 @@ function renderProducts() {
 
 /* ---------- PRODUCT MODAL ---------- */
 function openProduct(id) {
+  closeModal(); // prevent duplicate modal
+
   const p = PRODUCTS.find(x => x.id === id);
   let shirtHTML = "";
 
@@ -120,11 +146,14 @@ function openProduct(id) {
     <div id="modal">
       <div class="modal-box">
         <h2>${p.name}</h2>
+        <img src="${p.imgs[0]}" style="width:100%;border-radius:8px">
+        <img src="${p.imgs[1]}" style="width:100%;margin-top:8px;border-radius:8px">
+
         <p>₹${p.price}</p>
 
         ${shirtHTML}
 
-        <label>Letter / Message (Max 1000 characters)</label>
+        <label>Message / Letter (Max 1000 characters)</label>
         <textarea id="letter" maxlength="1000"
           placeholder="Write the message you want inside the hamper"></textarea>
 
@@ -157,7 +186,7 @@ function addToCart(id) {
   alert("Added to cart");
 }
 
-/* ---------- CHECKOUT ---------- */
+/* ---------- CHECKOUT (UPI) ---------- */
 function checkout() {
   const cart = getCart();
   if (!cart.length) return alert("Cart empty");
@@ -170,7 +199,7 @@ function checkout() {
   window.location.href = upi;
 }
 
-/* ---------- WHATSAPP ---------- */
+/* ---------- WHATSAPP ORDER ---------- */
 function whatsappOrder() {
   const cart = getCart();
   let msg = "New Order:%0A";
@@ -186,4 +215,3 @@ function whatsappOrder() {
 
 /* ---------- INIT ---------- */
 document.addEventListener("DOMContentLoaded", renderProducts);
-
