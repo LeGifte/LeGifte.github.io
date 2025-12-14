@@ -1,4 +1,4 @@
-/* ================= LeGifte – FINAL script.js ================= */
+/* ================= LeGifte – FINAL PAYMENT ENABLED script.js ================= */
 
 /* ---------- PRODUCTS ---------- */
 const PRODUCTS = [
@@ -6,107 +6,48 @@ const PRODUCTS = [
     id: 1,
     name: "Mini Hamper",
     price: 599,
-    imgs: [
-      "images/mini-hamper-1.jpg",
-      "images/mini-hamper-2.jpg"
-    ],
-    category: "hamper",
-    customizable: true
+    imgs: ["images/mini-hamper-1.jpg", "images/mini-hamper-2.jpg"],
+    video: "images/mini-hamper.mp4"
   },
   {
     id: 2,
     name: "Make Up Bouquet",
     price: 999,
-    imgs: [
-      "images/makeup-bouquet-1.jpg",
-      "images/makeup-bouquet-2.jpg"
-    ],
-    category: "beauty",
-    customizable: true
+    imgs: ["images/makeup-bouquet-1.jpg", "images/makeup-bouquet-2.jpg"],
+    video: ""
   },
   {
     id: 3,
     name: "12 Beauty Products Hamper",
     price: 1299,
-    imgs: [
-      "images/beauty-hamper-12-1.jpg",
-      "images/beauty-hamper-12-2.jpg"
-    ],
-    category: "beauty",
-    customizable: true
+    imgs: ["images/beauty-hamper-12-1.jpg", "images/beauty-hamper-12-2.jpg"],
+    video: ""
   },
   {
     id: 4,
     name: "Mini 6 Beauty Item Cup Hamper",
     price: 299,
-    imgs: [
-      "images/cup-hamper-6-1.jpg",
-      "images/cup-hamper-6-2.jpg"
-    ],
-    category: "cup",
-    customizable: true
+    imgs: ["images/cup-hamper-6-1.jpg", "images/cup-hamper-6-2.jpg"],
+    video: ""
   },
   {
     id: 5,
     name: "Men Customizable Hamper",
     price: 2999,
-    imgs: [
-      "images/men-custom-hamper-1.jpg",
-      "images/men-custom-hamper-2.jpg"
-    ],
-    category: "men",
-    customizable: true,
-    shirtColors: [
-      "Plain Black",
-      "Plain White",
-      "White & Green Stripe"
-    ]
-  },
-  {
-    id: 6,
-    name: "Jewellery Bouquet",
-    price: 799,
-    imgs: [
-      "images/jewellery-bouquet-1.jpg",
-      "images/jewellery-bouquet-2.jpg"
-    ],
-    category: "jewellery",
-    customizable: true
-  },
-  {
-    id: 7,
-    name: "Snack Bouquet",
-    price: 999,
-    imgs: [
-      "images/snack-bouquet-1.jpg",
-      "images/snack-bouquet-2.jpg"
-    ],
-    category: "snack",
-    customizable: true
-  },
-  {
-    id: 8,
-    name: "Women Hamper",
-    price: 1999,
-    imgs: [
-      "images/women-hamper-1.jpg",
-      "images/women-hamper-2.jpg"
-    ],
-    category: "beauty",
-    customizable: true
+    imgs: ["images/men-custom-hamper-1.jpg", "images/men-custom-hamper-2.jpg"],
+    video: ""
   }
 ];
 
 /* ---------- STORAGE ---------- */
 const CART_KEY = "legifte_cart";
+const WISHLIST_KEY = "legifte_wishlist";
 
-/* ---------- HELPERS ---------- */
-function getCart() {
-  return JSON.parse(localStorage.getItem(CART_KEY)) || [];
-}
-function saveCart(c) {
-  localStorage.setItem(CART_KEY, JSON.stringify(c));
-}
+const getCart = () => JSON.parse(localStorage.getItem(CART_KEY)) || [];
+const saveCart = c => localStorage.setItem(CART_KEY, JSON.stringify(c));
+
+const getWishlist = () => JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
+const saveWishlist = w => localStorage.setItem(WISHLIST_KEY, JSON.stringify(w));
 
 /* ---------- RENDER PRODUCTS ---------- */
 function renderProducts() {
@@ -116,11 +57,22 @@ function renderProducts() {
   PRODUCTS.forEach(p => {
     const d = document.createElement("div");
     d.className = "product";
+
     d.innerHTML = `
       <img src="${p.imgs[0]}" alt="${p.name}">
       <h3>${p.name}</h3>
       <p>₹${p.price}</p>
-      <button onclick="openProduct(${p.id})">View</button>
+
+      <small>✔ Cash on Delivery | ✔ Online UPI</small>
+
+      <button onclick="openProduct(${p.id})">View / Customize</button>
+      <button onclick="addToCart(${p.id})">Add to Cart</button>
+      <button onclick="orderCOD(${p.id})">Order – COD</button>
+      <button onclick="payUPI(${p.id})">Pay Online (UPI)</button>
+
+      <div style="text-align:right;margin-top:6px">
+        <span onclick="toggleWishlist(${p.id})" style="cursor:pointer">❤ Wishlist</span>
+      </div>
     `;
     box.appendChild(d);
   });
@@ -128,36 +80,34 @@ function renderProducts() {
 
 /* ---------- PRODUCT MODAL ---------- */
 function openProduct(id) {
-  closeModal(); // prevent duplicate modal
-
+  closeModal();
   const p = PRODUCTS.find(x => x.id === id);
-  let shirtHTML = "";
-
-  if (p.shirtColors) {
-    shirtHTML = `
-      <label>Shirt Color</label>
-      <select id="shirtColor">
-        ${p.shirtColors.map(c => `<option>${c}</option>`).join("")}
-      </select>
-    `;
-  }
 
   document.body.insertAdjacentHTML("beforeend", `
     <div id="modal">
       <div class="modal-box">
+
         <h2>${p.name}</h2>
-        <img src="${p.imgs[0]}" style="width:100%;border-radius:8px">
-        <img src="${p.imgs[1]}" style="width:100%;margin-top:8px;border-radius:8px">
 
-        <p>₹${p.price}</p>
+        ${p.video ? `
+          <video controls style="width:100%;border-radius:6px;margin-bottom:8px">
+            <source src="${p.video}" type="video/mp4">
+          </video>
+        ` : ""}
 
-        ${shirtHTML}
+        <img src="${p.imgs[0]}" style="width:100%;border-radius:6px">
+        <img src="${p.imgs[1]}" style="width:100%;margin-top:8px;border-radius:6px">
 
-        <label>Message / Letter (Max 1000 characters)</label>
-        <textarea id="letter" maxlength="1000"
-          placeholder="Write the message you want inside the hamper"></textarea>
+        <p><b>₹${p.price}</b></p>
+        <p><small>✔ COD | ✔ UPI (PhonePe / Paytm / GPay)</small></p>
+
+        <label>Custom Letter / Message</label>
+        <textarea id="customMessage"
+          placeholder="Write your message (optional)"></textarea>
 
         <button onclick="addToCart(${p.id})">Add to Cart</button>
+        <button onclick="orderCOD(${p.id})">Order – COD</button>
+        <button onclick="payUPI(${p.id})">Pay Online (UPI)</button>
         <button onclick="closeModal()">Close</button>
       </div>
     </div>
@@ -177,41 +127,58 @@ function addToCart(id) {
     id: p.id,
     name: p.name,
     price: p.price,
-    shirtColor: document.getElementById("shirtColor")?.value || "",
-    letter: document.getElementById("letter").value
+    message: document.getElementById("customMessage")?.value || ""
   });
 
   saveCart(cart);
   closeModal();
-  alert("Added to cart");
+  alert("Added to Cart");
 }
 
-/* ---------- CHECKOUT (UPI) ---------- */
-function checkout() {
-  const cart = getCart();
-  if (!cart.length) return alert("Cart empty");
-
-  const total = cart.reduce((s, i) => s + i.price, 0);
-
-  const upi =
-    `upi://pay?pa=9431541689@ibl&pn=LeGifte&am=${total}&cu=INR`;
-
-  window.location.href = upi;
+/* ---------- WISHLIST ---------- */
+function toggleWishlist(id) {
+  let wl = getWishlist();
+  if (wl.includes(id)) {
+    wl = wl.filter(x => x !== id);
+    alert("Removed from Wishlist");
+  } else {
+    wl.push(id);
+    alert("Added to Wishlist");
+  }
+  saveWishlist(wl);
 }
 
-/* ---------- WHATSAPP ORDER ---------- */
-function whatsappOrder() {
-  const cart = getCart();
-  let msg = "New Order:%0A";
+/* ---------- COD ORDER (WHATSAPP) ---------- */
+function orderCOD(id) {
+  const p = PRODUCTS.find(x => x.id === id);
 
-  cart.forEach(i => {
-    msg += `• ${i.name}%0A`;
-    if (i.shirtColor) msg += `  Shirt: ${i.shirtColor}%0A`;
-    if (i.letter) msg += `  Message: ${i.letter}%0A`;
-  });
+  const msg =
+`Hi LeGifte,
+I want to order:
+${p.name}
+Price: ₹${p.price}
 
-  window.open(`https://wa.me/919431541689?text=${msg}`);
+Payment Mode: Cash on Delivery`;
+
+  window.open(https://wa.me/919431541689?text=${encodeURIComponent(msg)});
 }
+
+/* ---------- ONLINE PAYMENT (UPI) ---------- */
+function payUPI(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+
+  const upiLink =
+    upi://pay?pa=9431541689@ibl&pn=LeGifte&am=${p.price}&cu=INR;
+
+  window.location.href = upiLink;
+}
+
+/* ---------- FLOATING WHATSAPP ---------- */
+document.body.insertAdjacentHTML("beforeend", `
+  <a href="https://wa.me/919431541689" class="wa-btn" target="_blank">
+    💬 WhatsApp Help
+  </a>
+`);
 
 /* ---------- INIT ---------- */
 document.addEventListener("DOMContentLoaded", renderProducts);
