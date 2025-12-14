@@ -1,128 +1,104 @@
-/* ================= LeGifte CSP SAFE FINAL SCRIPT ================= */
+/*************** CONFIG ***************/
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtd00FIPgoYL-XrtfwKGqBlM6_WwaTOq9NymQWQ9pKzU2tIRLsUBmu13h21GKF98gU/exec";
+const SELLER_PHONE = "919431541689";
+const UPI_ID = "9431541689@ibl";
 
+/*************** PRODUCTS ***************/
 const PRODUCTS = [
   { id: 1, name: "Mini Hamper", price: 599, customizable: true },
   { id: 2, name: "Make Up Bouquet", price: 999, customizable: false },
-  { id: 3, name: "12 Beauty Products Hamper", price: 1299, customizable: true },
+  { id: 3, name: "12 Beauty Products Hamper", price: 1299, customizable: false },
   { id: 4, name: "Mini 6 Beauty Item Cup Hamper", price: 299, customizable: true },
   { id: 5, name: "Men Customizable Hamper", price: 2999, customizable: true }
 ];
 
-const ORDER_API = "https://script.google.com/macros/s/AKfycbxtd00FIPgoYL-XrtfwKGqBlM6_WwaTOq9NymQWQ9pKzU2tIRLsUBmu13h21GKF98gU/exec";
-const UPI_ID = "9431541689@ibl";
-const WHATSAPP = "919431541689";
+let selectedProduct = null;
 
-/* ---------- HELPERS ---------- */
-function qs(id) {
-  return document.getElementById(id);
-}
-
-/* ---------- BUY FLOW ---------- */
+/*************** BUY NOW ***************/
 function buyNow(id) {
-  const product = PRODUCTS.find(p => p.id === id);
-  localStorage.setItem("currentProduct", JSON.stringify(product));
-  openOrderForm(product);
+  selectedProduct = PRODUCTS.find(p => p.id === id);
+  openOrderForm();
 }
 
-function openOrderForm(product) {
-  const msgBox = product.customizable
-    ? <textarea id="giftMsg" placeholder="Gift Message"></textarea>
-    : "";
+/*************** ORDER FORM ***************/
+function openOrderForm() {
+  closeModal();
+
+  const msgBox = selectedProduct.customizable
+    ? <textarea id="giftMsg" placeholder="Gift Message (optional)"></textarea>
+    : ``;
 
   document.body.insertAdjacentHTML("beforeend", `
-    <div class="modal" id="orderModal">
+    <div id="modal" class="modal">
       <div class="modal-box">
-        <h2>${product.name}</h2>
-        <p>₹${product.price}</p>
-        ${msgBox}
+        <h2>${selectedProduct.name}</h2>
+        <p>₹${selectedProduct.price}</p>
 
         <input id="custName" placeholder="Name" required>
         <input id="custPhone" placeholder="Phone" required>
         <textarea id="custAddress" placeholder="Full Address" required></textarea>
 
-        <button id="payOnline">Pay Online</button>
-        <button id="payCOD">Cash on Delivery</button>
+        ${msgBox}
+
+        <select id="paymentMode">
+          <option value="Online">Online Payment</option>
+          <option value="COD">Cash on Delivery</option>
+        </select>
+
+        <button onclick="placeOrder()">Order Now</button>
         <button onclick="closeModal()">Close</button>
       </div>
     </div>
   `);
-
-  qs("payOnline").addEventListener("click", () => submitOrder("ONLINE"));
-  qs("payCOD").addEventListener("click", () => submitOrder("COD"));
 }
 
-function closeModal() {
-  qs("orderModal")?.remove();
-}
-
-/* ---------- ORDER SUBMIT ---------- */
-function submitOrder(mode) {
-  const product = JSON.parse(localStorage.getItem("currentProduct"));
-
+/*************** PLACE ORDER ***************/
+function placeOrder() {
   const data = {
-    product: product.name,
-    price: product.price,
-    name: qs("custName").value,
-    phone: qs("custPhone").value,
-    address: qs("custAddress").value,
-    message: qs("giftMsg")?.value || "",
-    paymentMode: mode
+    product: selectedProduct.name,
+    price: selectedProduct.price,
+    name: document.getElementById("custName").value,
+    phone: document.getElementById("custPhone").value,
+    address: document.getElementById("custAddress").value,
+    paymentMode: document.getElementById("paymentMode").value,
+    message: document.getElementById("giftMsg")?.value || ""
   };
 
-  fetch(ORDER_API, {
+  fetch(SCRIPT_URL, {
     method: "POST",
     body: JSON.stringify(data)
   })
-  .then(res => res.json())
-  .then(r => {
-    saveCustomerOrder(r.orderId, data);
-
-    if (mode === "ONLINE") {
-      const upi = upi://pay?pa=${UPI_ID}&pn=LeGifte&am=${product.price}&cu=INR;
-      window.location.href = upi;
+  .then(r => r.json())
+  .then(res => {
+    closeModal();
+    if (data.paymentMode === "Online") {
+      openUPI(data);
     } else {
-      alert("Order placed successfully (COD)");
+      openCOD(data);
     }
-
-    showOrderSuccess(r.orderId);
   });
 }
 
-/* ---------- CUSTOMER ORDERS ---------- */
-function saveCustomerOrder(id, data) {
-  const orders = JSON.parse(localStorage.getItem("myOrders") || "[]");
-  orders.push({
-    id,
-    ...data,
-    status: "Order Received",
-    eta: new Date(Date.now() + 7*86400000).toDateString()
-  });
-  localStorage.setItem("myOrders", JSON.stringify(orders));
+/*************** ONLINE PAYMENT ***************/
+function openUPI(data) {
+  const upiURL = upi://pay?pa=${UPI_ID}&pn=LeGifte&am=${data.price}&cu=INR;
+  window.location.href = upiURL;
+
+  setTimeout(() => {
+    const msg = Hi, I have paid ₹${data.price} for ${data.product}. Please find payment screenshot.;
+    window.location.href =
+      https://wa.me/${SELLER_PHONE}?text=${encodeURIComponent(msg)};
+  }, 3000);
 }
 
-function showOrderSuccess(orderId) {
-  closeModal();
-  document.body.insertAdjacentHTML("beforeend", `
-    <div class="modal">
-      <div class="modal-box">
-        <h3>Order Received ✅</h3>
-        <p>Order ID: ${orderId}</p>
-        <p>Delivery in 7 days</p>
-
-        <button onclick="shareScreenshot()">Share Payment Screenshot</button>
-        <button onclick="this.parentElement.parentElement.remove()">Close</button>
-      </div>
-    </div>
-  `);
+/*************** COD ***************/
+function openCOD(data) {
+  const msg = New COD Order\n\nProduct: ${data.product}\nPrice: ₹${data.price}\nName: ${data.name}\nPhone: ${data.phone}\nAddress: ${data.address};
+  window.location.href =
+    https://wa.me/${SELLER_PHONE}?text=${encodeURIComponent(msg)};
 }
 
-function shareScreenshot() {
-  window.open(https://wa.me/${WHATSAPP}?text=Payment%20screenshot%20for%20my%20LeGifte%20order);
+/*************** UTIL ***************/
+function closeModal() {
+  document.getElementById("modal")?.remove();
 }
-
-/* ---------- INIT ---------- */
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("[data-buy]").forEach(btn => {
-    btn.addEventListener("click", () => buyNow(Number(btn.dataset.buy)));
-  });
-});
