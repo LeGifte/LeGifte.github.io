@@ -1,28 +1,22 @@
-## 📁 Project Structure
+# LeGifte – Official Store
 
-/
-├── index.html
-├── style.css
-├── script.js
-├── images/
-│   ├── mini-hamper-1.jpg
-│   ├── mini-hamper-2.jpg
-│   └── ...
-└── README.md
+Live Website: https://legifte.github.io
 
----
+## Features
+- Product listing
+- 2 images per product
+- Cart & Wishlist
+- Letter customization
+- Cash on Delivery
+- Online UPI payment
+- WhatsApp ordering
+- Mobile friendly
 
-## 🛠 How to Update Products
+## Folder Structure
+/index.html  
+/style.css  
+/script.js  
+/images/  
 
-1. Upload product images (minimum 2) inside images/
-2. (Optional) Upload product video in .mp4 format
-3. Update product details in script.js
-4. Commit changes – website updates automatically
-
----
-
-## 📞 Contact / Orders
-
-📱 *WhatsApp:* +91 94315 41689  
-💬 Customers can place orders directly via WhatsApp  
-💳 Payment: UPI / PhonePe / Paytm / COD available
+## Contact
+WhatsApp: +91 94315 41689
