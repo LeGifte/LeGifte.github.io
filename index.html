@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Le Gifte - Official Store</title>
+  <title>Le Gifte – Official Store</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <h1>Welcome to Le Gifte</h1>
-    <p>Your Jharkhand gifting store is now live!</p>
+
+  <h1 style="text-align:center;">Le Gifte – Official Store</h1>
+
+  <!-- Products will load here -->
+  <div id="product-list"></div>
+
+  <!-- Checkout buttons -->
+  <div style="text-align:center; margin:30px;">
+    <button onclick="checkout()">Pay via UPI</button>
+    <button onclick="whatsappOrder()">Order on WhatsApp</button>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
