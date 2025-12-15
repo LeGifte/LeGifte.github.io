@@ -1,27 +1,28 @@
-/* RESET */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* BODY */
 body {
+  background: #f5f5f5;
   font-family: Arial, sans-serif;
-  background: #f7f7f7;
-  color: #222;
 }
 
 /* HEADER */
 .site-header {
   background: #000;
-  padding: 30px 20px;
-  text-align: center;
+  padding: 35px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo {
   height: 130px;
   max-width: 100%;
+  display: block;
 }
 
 .tagline {
@@ -29,82 +30,31 @@ body {
   font-family: 'Playfair Display', serif;
   font-size: 18px;
   letter-spacing: 3px;
-  color: #d4af37; /* Gold */
+  color: #d4af37;
   text-transform: uppercase;
 }
 
 /* TOP BAR */
 .top-bar {
+  background: #111;
+  padding: 12px;
   display: flex;
   justify-content: center;
   gap: 15px;
-  padding: 12px;
-  background: #111;
 }
 
 .top-bar button,
 .top-bar a {
-  background: transparent;
   border: 1px solid #d4af37;
+  background: transparent;
   color: #d4af37;
-  padding: 8px 14px;
+  padding: 8px 16px;
   cursor: pointer;
   text-decoration: none;
-  font-size: 14px;
 }
 
 .top-bar button:hover,
 .top-bar a:hover {
   background: #d4af37;
   color: #000;
-}
-
-/* PRODUCTS */
-.product-grid {
-  padding: 30px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-}
-
-/* MODAL */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.hidden {
-  display: none;
-}
-
-.modal-box {
-  background: #fff;
-  padding: 25px;
-  width: 90%;
-  max-width: 400px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.modal-box h2 {
-  margin-bottom: 15px;
-}
-
-.modal-box button {
-  margin-top: 10px;
-  padding: 10px;
-  width: 100%;
-  border: none;
-  background: #000;
-  color: #fff;
-  cursor: pointer;
-}
-
-.modal-box button:hover {
-  background: #333;
 }
