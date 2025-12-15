@@ -1,49 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LeGifte – Official Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeGifté – Curated Treasures</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-<header>
-  <h1>LeGifte</h1>
-  <p>Premium Custom Gift Store</p>
-</header>
+  <!-- HEADER -->
+  <header class="site-header">
+    <img src="logo.png" alt="LeGifté Logo" class="logo">
+    <p class="tagline">Curated Treasures</p>
+  </header>
 
-<nav class="top-bar">
-  <button onclick="openCart()">🛒 Cart</button>
-  <button onclick="openWishlist()">❤ Wishlist</button>
-  <a href="https://wa.me/919431541689" target="_blank">📞 WhatsApp</a>
-</nav>
+  <!-- TOP BAR -->
+  <nav class="top-bar">
+    <button onclick="openCart()">🛒 Cart</button>
+    <button onclick="openWishlist()">❤ Wishlist</button>
+    <a href="https://wa.me/919431541689" target="_blank">📞 WhatsApp</a>
+  </nav>
 
-<main>
-  <div id="product-list" class="product-grid"></div>
-</main>
+  <!-- MAIN CONTENT -->
+  <main>
+    <div id="product-list" class="product-grid"></div>
+  </main>
 
-<!-- CART MODAL -->
-<div id="cartModal" class="modal hidden">
-  <div class="modal-box">
-    <h2>Your Cart</h2>
-    <div id="cartItems"></div>
-    <button onclick="checkoutUPI()">Pay Online (UPI)</button>
-    <button onclick="checkoutCOD()">Cash on Delivery</button>
-    <button onclick="closeCart()">Close</button>
+  <!-- CART MODAL -->
+  <div id="cartModal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Your Cart</h2>
+      <div id="cartItems"></div>
+      <button onclick="checkoutUPI()">Pay Online (UPI)</button>
+      <button onclick="checkoutCOD()">Cash on Delivery</button>
+      <button onclick="closeCart()">Close</button>
+    </div>
   </div>
-</div>
 
-<!-- WISHLIST MODAL -->
-<div id="wishlistModal" class="modal hidden">
-  <div class="modal-box">
-    <h2>Wishlist</h2>
-    <div id="wishlistItems"></div>
-    <button onclick="closeWishlist()">Close</button>
+  <!-- WISHLIST MODAL -->
+  <div id="wishlistModal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Wishlist</h2>
+      <div id="wishlistItems"></div>
+      <button onclick="closeWishlist()">Close</button>
+    </div>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <!-- JS -->
+  <script src="script.js"></script>
+
 </body>
 </html>
