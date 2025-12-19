@@ -1,46 +1,83 @@
-// 🔴 PASTE YOUR GOOGLE SHEET WEB APP URL HERE
-const SHEET_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
+// ✅ GOOGLE SHEET WEB APP URL (CONFIRMED)
+const SHEET_URL =
+  "https://script.google.com/macros/s/AKfycbxtd00FIPgoYL-XrtfwKGqBlM6_WwaTOq9NymQWQ9pKzU2tIRLsUBmu13h21GKF98gU/exec";
 
 let products = [];
 let cart = [];
 let wishlist = [];
 
-/* LOAD PRODUCTS */
-fetch(SHEET_URL)
-  .then(res => res.json())
-  .then(data => {
+// 🔹 Load products when page loads
+document.addEventListener("DOMContentLoaded", loadProducts);
+
+// 🔹 Fetch data from Google Sheet
+async function loadProducts() {
+  try {
+    const response = await fetch(SHEET_URL);
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      console.error("Sheet data is not an array:", data);
+      return;
+    }
+
     products = data;
     renderProducts();
-  })
-  .catch(err => console.error("Sheet error", err));
+  } catch (error) {
+    console.error("Error loading products:", error);
+  }
+}
 
+// 🔹 PRODUCT LISTING (MAIN PART)
 function renderProducts() {
-  const list = document.getElementById("product-list");
-  list.innerHTML = "";
+  const container = document.getElementById("product-list");
 
-  products.forEach(p => {
-    list.innerHTML += `
-      <div class="product-card">
-        <img src="${p.image}">
-        <h4>${p.name}</h4>
-        <p>₹${p.price}</p>
-        <button onclick="addToCart('${p.name}', '${p.price}')">Add to Cart</button>
-        <button onclick="addToWishlist('${p.name}')">Wishlist</button>
-      </div>
+  if (!container) {
+    console.error("❌ product-list div not found in HTML");
+    return;
+  }
+
+  container.innerHTML = "";
+
+  if (products.length === 0) {
+    container.innerHTML = "<p>No products available</p>";
+    return;
+  }
+
+  products.forEach((product, index) => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    card.innerHTML = `
+      <img src="${product.image}" alt="${product.name}">
+      <h3>${product.name}</h3>
+      <p>₹${product.price}</p>
+
+      <button onclick="addToCart(${index})">Add to Cart</button>
+      <button onclick="addToWishlist(${index})">💛 Wishlist</button>
     `;
+
+    container.appendChild(card);
   });
 }
 
-/* CART */
-function addToCart(name, price) {
-  cart.push({ name, price });
+// 🔹 CART FUNCTIONS
+function addToCart(index) {
+  cart.push(products[index]);
   alert("Added to cart");
 }
 
 function openCart() {
   const box = document.getElementById("cartItems");
   box.innerHTML = "";
-  cart.forEach(i => box.innerHTML += `<p>${i.name} – ₹${i.price}</p>`);
+
+  if (cart.length === 0) {
+    box.innerHTML = "<p>Your cart is empty</p>";
+  }
+
+  cart.forEach(item => {
+    box.innerHTML += `<p>${item.name} – ₹${item.price}</p>`;
+  });
+
   document.getElementById("cartModal").classList.remove("hidden");
 }
 
@@ -48,16 +85,24 @@ function closeCart() {
   document.getElementById("cartModal").classList.add("hidden");
 }
 
-/* WISHLIST */
-function addToWishlist(name) {
-  wishlist.push(name);
+// 🔹 WISHLIST FUNCTIONS
+function addToWishlist(index) {
+  wishlist.push(products[index]);
   alert("Added to wishlist");
 }
 
 function openWishlist() {
   const box = document.getElementById("wishlistItems");
   box.innerHTML = "";
-  wishlist.forEach(i => box.innerHTML += `<p>${i}</p>`);
+
+  if (wishlist.length === 0) {
+    box.innerHTML = "<p>No items in wishlist</p>";
+  }
+
+  wishlist.forEach(item => {
+    box.innerHTML += `<p>${item.name}</p>`;
+  });
+
   document.getElementById("wishlistModal").classList.remove("hidden");
 }
 
@@ -65,9 +110,16 @@ function closeWishlist() {
   document.getElementById("wishlistModal").classList.add("hidden");
 }
 
-/* CHECKOUT */
+// 🔹 WHATSAPP CHECKOUT
 function checkout() {
-  let msg = "Order Details:%0A";
-  cart.forEach(i => msg += `${i.name} - ₹${i.price}%0A`);
-  window.open(`https://wa.me/919431541689?text=${msg}`, "_blank");
+  let message = "Order Details:%0A";
+
+  cart.forEach(item => {
+    message += `${item.name} - ₹${item.price}%0A`;
+  });
+
+  window.open(
+    `https://wa.me/919431541689?text=${message}`,
+    "_blank"
+  );
 }
